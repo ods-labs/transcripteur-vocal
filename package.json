@@ -18,7 +18,6 @@
   "author": "Fred",
   "license": "MIT",
   "dependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.879.0",
     "@google/generative-ai": "^0.21.0",
     "next": "^15.1.0",
     "react": "^19.0.0",

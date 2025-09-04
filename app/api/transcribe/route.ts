@@ -1,45 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { SecretsManagerClient, GetSecretValueCommand } from '@aws-sdk/client-secrets-manager'
 
-// Fonction pour récupérer la clé API depuis AWS Secrets Manager
-async function getGeminiApiKey(): Promise<string> {
-  try {
-    // En développement, utiliser process.env
-    if (process.env.NODE_ENV === 'development') {
-      return process.env.GEMINI_API_KEY!
-    }
-    
-    // En production sur Amplify, récupérer depuis Secrets Manager
-    const client = new SecretsManagerClient({ region: 'eu-west-3' })
-    const response = await client.send(
-      new GetSecretValueCommand({
-        SecretId: 'transcripteur-vocal-gemini-api-key',
-        VersionStage: 'AWSCURRENT'
-      })
-    )
-    
-    return response.SecretString || ''
-  } catch (error) {
-    console.error('Erreur récupération clé API depuis Secrets Manager:', error)
-    // Fallback sur process.env si Secrets Manager échoue
-    return process.env.GEMINI_API_KEY || ''
-  }
-}
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
-    // Récupérer la clé API
-    const apiKey = await getGeminiApiKey()
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Clé API Gemini non configurée' },
-        { status: 500 }
-      )
-    }
-    
-    const genAI = new GoogleGenerativeAI(apiKey)
-    
     const formData = await request.formData()
     const audioFile = formData.get('audio') as File
     const selectedModel = (formData.get('model') as string) || 'pro'

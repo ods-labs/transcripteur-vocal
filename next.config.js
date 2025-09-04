@@ -1,10 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Configuration pour AWS Amplify
-  trailingSlash: true,
-  images: {
-    unoptimized: true
-  }
+  // Configuration pour déploiement standard
 }
 
 module.exports = nextConfig
