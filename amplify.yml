@@ -3,7 +3,8 @@ backend:
   phases:
     build:
       commands:
-        - npm ci
+        - npm ci --production
+        - amplify push --yes
 frontend:
   phases:
     preBuild:
