@@ -1,7 +1,7 @@
 {
   "name": "transcripteur-vocal",
   "version": "1.0.0",
-  "Bash(mv:*)",  "description": "Application de transcription vocale avec Gemini",
+  "description": "Application de transcription vocale avec Gemini",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/react": "19.1.12",
     "eslint": "^9.15.0",
     "eslint-config-next": "^15.1.0",
     "typescript": "^5.7.3"

@@ -78,13 +78,22 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
           throw error
         }
       }
+      throw new Error('Toutes les tentatives ont échoué')
     }
 
     const result = await generateWithRetry()
+    if (!result) {
+      throw new Error('Aucune réponse du modèle')
+    }
+    
     const generatedText = result.response.text()
     
     // Récupérer les métadonnées d'usage
-    const usageMetadata = result.response.usageMetadata
+    const usageMetadata = result.response.usageMetadata || {
+      promptTokenCount: 0,
+      candidatesTokenCount: 0,
+      totalTokenCount: 0
+    }
     
     // Calculer le coût en euros (prix 2025)
     const pricing = selectedModel === 'flash' 
@@ -97,7 +106,7 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
     const totalCostUSD = inputCostUSD + outputCostUSD
     const totalCostEUR = totalCostUSD * 0.92 // Approximation USD->EUR
     
-    console.log(`Coût de la requête: ${totalCostEUR.toFixed(6)}€ (${usageMetadata.promptTokenCount} tokens entrée, ${usageMetadata.candidatesTokenCount} tokens sortie)`)
+    console.log(`Coût de la requête: ${totalCostEUR.toFixed(6)}€ (${usageMetadata.promptTokenCount || 0} tokens entrée, ${usageMetadata.candidatesTokenCount || 0} tokens sortie)`)
 
     return NextResponse.json({
       success: true,
