@@ -286,3 +286,36 @@
     flex-direction: column;
   }
 }
+
+.examples {
+  text-align: left;
+  color: #666;
+}
+
+.exampleTitle {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 15px;
+  font-size: 1rem;
+}
+
+.exampleItem {
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+  line-height: 1.4;
+}
+
+.exampleItem:last-child {
+  border-bottom: none;
+}
+
+.exampleItem strong {
+  color: #333;
+}
+
+.exampleItem br + * {
+  font-style: italic;
+  color: #777;
+  font-size: 0.9rem;
+}

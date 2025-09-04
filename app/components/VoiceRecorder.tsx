@@ -252,8 +252,32 @@ export default function VoiceRecorder() {
               <div className={styles.loader}></div>
               Transcription en cours...
             </div>
+          ) : transcript ? (
+            transcript
           ) : (
-            transcript || 'Votre transcription apparaîtra ici...'
+            <div className={styles.examples}>
+              <div className={styles.exampleTitle}>💡 Exemples d'utilisation :</div>
+              
+              <div className={styles.exampleItem}>
+                <strong>📧 Email professionnel :</strong><br />
+                "Rédige un email pour mon client, ton professionnel, pour reporter notre réunion de demain..."
+              </div>
+              
+              <div className={styles.exampleItem}>
+                <strong>📝 Article de blog :</strong><br />
+                "Écris un article sur les tendances IA 2025, style décontracté, 500 mots environ..."
+              </div>
+              
+              <div className={styles.exampleItem}>
+                <strong>💬 Message Slack :</strong><br />
+                "Résume les points clés de notre réunion d'équipe, format court pour Slack..."
+              </div>
+              
+              <div className={styles.exampleItem}>
+                <strong>📋 Rapport :</strong><br />
+                "Transforme mes notes en rapport structuré pour la direction, ton formel..."
+              </div>
+            </div>
           )}
         </div>
         
