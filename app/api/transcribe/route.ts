@@ -16,8 +16,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('Fichier reçu:', audioFile.name, 'Taille:', audioFile.size)
-
     // Convertir le fichier en base64
     const arrayBuffer = await audioFile.arrayBuffer()
     const audioData = Buffer.from(arrayBuffer).toString('base64')
@@ -58,8 +56,6 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
       let modelName = selectedModel === 'flash' ? 'gemini-2.5-flash' : 'gemini-2.5-pro'
       let model = genAI.getGenerativeModel({ model: modelName })
       
-      console.log(`Tentative avec le modèle: ${modelName}`)
-
       try {
         const result = await model.generateContent([prompt, audioPart])
         return { result, actualModel: selectedModel, modelName }
@@ -126,8 +122,6 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
     const totalCostUSD = inputCostUSD + outputCostUSD
     const totalCostEUR = totalCostUSD * 0.92 // Approximation USD->EUR
     
-    console.log(`Coût de la requête: ${totalCostEUR.toFixed(6)}€ (${usageMetadata.promptTokenCount || 0} tokens entrée, ${usageMetadata.candidatesTokenCount || 0} tokens sortie)`)
-
     return NextResponse.json({
       success: true,
       content: generatedText.trim(),
