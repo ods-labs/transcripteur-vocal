@@ -1,44 +1,68 @@
-# Transcripteur Vocal
+# 🎙️ Transcripteur Vocal
 
-Application de transcription vocale utilisant l'API Gemini Pro de Google.
+Application Next.js de transcription vocale utilisant l'API Gemini de Google.
 
-## Déploiement sur AWS Amplify
+## ✨ Fonctionnalités
 
-### 1. Prérequis
-- Compte AWS avec accès à Amplify
-- Clé API Gemini Pro (Google AI Studio)
-- Repository Git (GitHub, GitLab, etc.)
+- 🎤 **Enregistrement vocal** en temps réel
+- 🤖 **Deux modèles IA** : Gemini Flash (rapide) et Pro (précis)  
+- 💰 **Calcul de coût** en temps réel
+- 🔄 **Retry automatique** en cas d'erreur API
+- 📋 **Copie** dans le presse-papier
+- 📱 **Interface responsive**
 
-### 2. Configuration des variables d'environnement
+## 🚀 Déploiement sur Vercel
 
-Dans la console AWS Amplify, ajoutez cette variable d'environnement :
+### 1. Fork ce repository
 
+### 2. Connecter à Vercel
+- Aller sur [vercel.com](https://vercel.com)
+- Importer votre repository GitHub
+- Vercel détecte automatiquement Next.js
+
+### 3. Configurer les variables d'environnement
+Dans les settings Vercel, ajouter :
 ```
 GEMINI_API_KEY = votre_cle_api_gemini
 ```
 
-### 3. Déploiement
+### 4. Déployer
+Le déploiement est **automatique** ! ✅
 
-1. Connectez votre repository à AWS Amplify
-2. Amplify détectera automatiquement le fichier `amplify.yml`
-3. Ajoutez la variable d'environnement `GEMINI_API_KEY`
-4. Lancez le déploiement
+## 🛠️ Développement local
 
-### 4. Structure du projet
+```bash
+# Installer les dépendances
+npm install
 
-```
-/
-├── public/           # Frontend statique
-│   └── index.html   # Interface utilisateur
-├── server.js        # Serveur Express/API
-├── amplify.yml      # Configuration Amplify
-└── package.json     # Dépendances Node.js
+# Créer .env.local avec votre clé API
+echo "GEMINI_API_KEY=votre_cle" > .env.local
+
+# Lancer le serveur de dev
+npm run dev
 ```
 
-## Utilisation locale
+Ouvrir [http://localhost:3000](http://localhost:3000)
 
-1. Clonez le repository
-2. `npm install`
-3. Créez un fichier `.env` avec `GEMINI_API_KEY=votre_cle`
-4. `npm run dev`
-5. Ouvrez `http://localhost:3000`
+## 📱 Utilisation
+
+1. **Cliquer** sur le bouton microphone
+2. **Parler** votre brief/mémo
+3. **Choisir** le modèle (Flash=rapide, Pro=précis)
+4. **Récupérer** le texte transcrit
+5. **Copier** dans le presse-papier
+
+## 💡 Tips
+
+- **Flash** : Idéal pour des notes rapides
+- **Pro** : Meilleur pour du contenu important
+- Le **coût** s'affiche automatiquement
+- **Retry** automatique si le serveur est surchargé
+
+## 🔧 Technologies
+
+- **Next.js 15** (App Router)
+- **React 19** 
+- **TypeScript**
+- **Google Gemini API**
+- **CSS Modules**

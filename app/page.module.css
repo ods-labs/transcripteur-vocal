@@ -1,0 +1,288 @@
+.container {
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  max-width: 700px;
+  width: 100%;
+  text-align: center;
+  margin: 20px auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.container h1 {
+  color: #333;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.recorderSection {
+  margin-bottom: 30px;
+}
+
+.recordButton {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 2rem;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.recordButton.idle {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+  color: white;
+}
+
+.recordButton.recording {
+  background: linear-gradient(135deg, #ff3838, #c0392b);
+  animation: pulse 1.5s infinite;
+}
+
+.recordButton.processing {
+  background: linear-gradient(135deg, #ffa726, #ff9800);
+  color: white;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.recordButton:hover {
+  transform: scale(1.05);
+}
+
+.status {
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status.idle { color: #666; }
+.status.recording { color: #ff3838; font-weight: bold; }
+.status.processing { color: #ff9800; font-weight: bold; }
+
+.timer {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ff3838;
+  margin-bottom: 20px;
+}
+
+.modelSelection {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+}
+
+.modelSelection h4 {
+  color: #495057;
+  margin-bottom: 15px;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.modelButtons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+.modelButton {
+  flex: 1;
+  max-width: 200px;
+  padding: 15px 20px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.modelButton.flash {
+  background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+  color: white;
+}
+
+.modelButton.flash:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.modelButton.pro {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+}
+
+.modelButton.pro:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.modelInfo {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  margin-top: 5px;
+}
+
+.transcriptSection {
+  width: 100%;
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 2px solid #f1f1f1;
+}
+
+.transcriptSection h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.transcriptBox {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  min-height: 100px;
+  text-align: left;
+  line-height: 1.6;
+  color: #333;
+  border: 2px dashed #ddd;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
+}
+
+.transcriptBox.hasContent {
+  border: 2px solid #667eea;
+  background: #f0f4ff;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+}
+
+.loader {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.copyButton {
+  background: linear-gradient(135deg, #10ac84, #00d2d3);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
+}
+
+.copyButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 172, 132, 0.3);
+}
+
+.costInfo {
+  background: #e8f5e8;
+  border: 1px solid #c3e6c3;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 0.85rem;
+  color: #2e7d2e;
+  margin-bottom: 15px;
+}
+
+.costDetails {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 5px;
+  font-family: monospace;
+}
+
+.error {
+  color: #e74c3c;
+  background: #ffeaea;
+  border: 2px solid #e74c3c;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
+.errorRetry {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  color: #856404;
+}
+
+.retryButton {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.retryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(243, 156, 18, 0.3);
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 30px 20px;
+  }
+
+  .container h1 {
+    font-size: 1.5rem;
+  }
+
+  .recordButton {
+    width: 100px;
+    height: 100px;
+    font-size: 1.5rem;
+  }
+
+  .modelButtons {
+    flex-direction: column;
+  }
+}
