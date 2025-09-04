@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcripteur Vocal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .recorder-section {
+            margin-bottom: 30px;
+        }
+
+        .record-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 2rem;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .record-button.idle {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #ff3838, #c0392b);
+            animation: pulse 1.5s infinite;
+        }
+
+        .record-button.processing {
+            background: linear-gradient(135deg, #ffa726, #ff9800);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+        }
+
+        .status {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status.idle { color: #666; }
+        .status.recording { color: #ff3838; font-weight: bold; }
+        .status.processing { color: #ff9800; font-weight: bold; }
+
+        .timer {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ff3838;
+            margin-bottom: 20px;
+        }
+
+        .transcript-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f1f1f1;
+        }
+
+        .transcript-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 100px;
+            text-align: left;
+            line-height: 1.6;
+            color: #333;
+            border: 2px dashed #ddd;
+            transition: all 0.3s ease;
+        }
+
+        .transcript-box.has-content {
+            border: 2px solid #667eea;
+            background: #f0f4ff;
+        }
+
+        .transcript-box.loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-style: italic;
+        }
+
+        .error {
+            color: #e74c3c;
+            background: #ffeaea;
+            border: 2px solid #e74c3c;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .permissions-warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .record-button {
+                width: 100px;
+                height: 100px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🎙️ Transcripteur Vocal</h1>
+
+    <div id="permissionsWarning" class="permissions-warning" style="display: none;">
+        Veuillez autoriser l'accès au microphone pour utiliser cette application.
+    </div>
+
+    <div class="recorder-section">
+        <button id="recordButton" class="record-button idle">
+            <span id="recordIcon">🎙️</span>
+        </button>
+
+        <div id="status" class="status idle">
+            Cliquez pour commencer l'enregistrement
+        </div>
+
+        <div id="timer" class="timer" style="display: none;">
+            00:00
+        </div>
+    </div>
+
+    <div class="transcript-section">
+        <h3>Transcription :</h3>
+        <div id="transcriptBox" class="transcript-box">
+            Votre transcription apparaîtra ici...
+        </div>
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+</div>
+
+<script>
+    class VoiceRecorder {
+        constructor() {
+            this.mediaRecorder = null;
+            this.audioChunks = [];
+            this.isRecording = false;
+            this.startTime = null;
+            this.timerInterval = null;
+
+            this.recordButton = document.getElementById('recordButton');
+            this.status = document.getElementById('status');
+            this.timer = document.getElementById('timer');
+            this.transcriptBox = document.getElementById('transcriptBox');
+            this.errorDiv = document.getElementById('error');
+            this.permissionsWarning = document.getElementById('permissionsWarning');
+            this.recordIcon = document.getElementById('recordIcon');
+
+            this.init();
+        }
+
+        async init() {
+            try {
+                // Demander permission microphone
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 44100
+                    }
+                });
+
+                this.mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'
+                });
+
+                this.setupMediaRecorder();
+                this.recordButton.addEventListener('click', () => this.toggleRecording());
+
+            } catch (error) {
+                console.error('Erreur d\'accès au microphone:', error);
+                this.showPermissionsWarning();
+            }
+        }
+
+        setupMediaRecorder() {
+            this.mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    this.audioChunks.push(event.data);
+                }
+            };
+
+            this.mediaRecorder.onstop = () => {
+                this.processRecording();
+            };
+        }
+
+        toggleRecording() {
+            if (!this.isRecording) {
+                this.startRecording();
+            } else {
+                this.stopRecording();
+            }
+        }
+
+        startRecording() {
+            if (!this.mediaRecorder) {
+                this.showError('Microphone non disponible');
+                return;
+            }
+
+            this.audioChunks = [];
+            this.isRecording = true;
+            this.startTime = Date.now();
+
+            this.mediaRecorder.start(100); // Collecte des chunks toutes les 100ms
+
+            this.updateUI('recording');
+            this.startTimer();
+            this.hideError();
+        }
+
+        stopRecording() {
+            if (!this.isRecording) return;
+
+            this.isRecording = false;
+            this.mediaRecorder.stop();
+            this.stopTimer();
+            this.updateUI('processing');
+        }
+
+        async processRecording() {
+            try {
+                // Créer le blob audio
+                const audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
+
+                if (audioBlob.size === 0) {
+                    throw new Error('Enregistrement vide');
+                }
+
+                // Envoyer au backend
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+
+                const response = await fetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    this.showTranscript(result.transcript);
+                } else {
+                    throw new Error(result.error || 'Erreur de transcription');
+                }
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                this.showError('Erreur lors de la transcription: ' + error.message);
+            } finally {
+                this.updateUI('idle');
+            }
+        }
+
+        updateUI(state) {
+            this.recordButton.className = `record-button ${state}`;
+
+            switch (state) {
+                case 'idle':
+                    this.status.textContent = 'Cliquez pour commencer l\'enregistrement';
+                    this.status.className = 'status idle';
+                    this.recordIcon.textContent = '🎙️';
+                    this.timer.style.display = 'none';
+                    break;
+                case 'recording':
+                    this.status.textContent = 'Enregistrement en cours... Cliquez pour arrêter';
+                    this.status.className = 'status recording';
+                    this.recordIcon.textContent = '⏹️';
+                    this.timer.style.display = 'block';
+                    break;
+                case 'processing':
+                    this.status.textContent = 'Transcription en cours...';
+                    this.status.className = 'status processing';
+                    this.recordIcon.textContent = '⏳';
+                    this.timer.style.display = 'none';
+                    this.showLoadingTranscript();
+                    break;
+            }
+        }
+
+        startTimer() {
+            this.timerInterval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const seconds = (elapsed % 60).toString().padStart(2, '0');
+                this.timer.textContent = `${minutes}:${seconds}`;
+            }, 1000);
+        }
+
+        stopTimer() {
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            }
+        }
+
+        showTranscript(text) {
+            this.transcriptBox.textContent = text;
+            this.transcriptBox.classList.add('has-content');
+        }
+
+        showLoadingTranscript() {
+            this.transcriptBox.innerHTML = '<div class="loader"></div>Transcription en cours...';
+            this.transcriptBox.classList.add('loading');
+            this.transcriptBox.classList.remove('has-content');
+        }
+
+        showError(message) {
+            this.errorDiv.textContent = message;
+            this.errorDiv.style.display = 'block';
+        }
+
+        hideError() {
+            this.errorDiv.style.display = 'none';
+        }
+
+        showPermissionsWarning() {
+            this.permissionsWarning.style.display = 'block';
+            this.recordButton.disabled = true;
+            this.status.textContent = 'Accès au microphone requis';
+            this.status.className = 'status error';
+        }
+    }
+
+    // Initialiser l'application
+    document.addEventListener('DOMContentLoaded', () => {
+        new VoiceRecorder();
+    });
+</script>
+</body>
+</html>
