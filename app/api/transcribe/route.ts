@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+// Debug pour vérifier la variable d'environnement
+console.log('ENV check:', {
+  hasKey: !!process.env.GEMINI_API_KEY,
+  keyLength: process.env.GEMINI_API_KEY?.length || 0,
+  keyPreview: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.substring(0, 10) + '...' : 'undefined'
+})
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(request: NextRequest) {
