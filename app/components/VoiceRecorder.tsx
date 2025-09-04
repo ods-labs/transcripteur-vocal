@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import ReactMarkdown from 'react-markdown'
 import styles from '../page.module.css'
 
 interface CostData {
@@ -183,6 +184,20 @@ export default function VoiceRecorder() {
     await processWithModel(lastModelRef.current)
   }, [processWithModel])
 
+  // Détecter si le contenu ressemble à du Markdown
+  const isMarkdown = useCallback((text: string) => {
+    const markdownIndicators = [
+      /^#{1,6}\s+/m,     // Titres
+      /\*{1,2}.*\*{1,2}/, // Gras/italique
+      /^[-*+]\s+/m,      // Listes
+      /^\d+\.\s+/m,      // Listes numérotées
+      /```[\s\S]*?```/,  // Code blocks
+      /`[^`]+`/,         // Code inline
+      /\[.*?\]\(.*?\)/   // Liens
+    ]
+    return markdownIndicators.some(pattern => pattern.test(text))
+  }, [])
+
   const copyToClipboard = useCallback(async () => {
     if (!transcript) return
     
@@ -253,7 +268,19 @@ export default function VoiceRecorder() {
               Transcription en cours...
             </div>
           ) : transcript ? (
-            transcript
+            isMarkdown(transcript) ? (
+              <div className={styles.markdown}>
+                <ReactMarkdown>
+                  {transcript}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <div className={styles.plainText}>
+                {transcript.split('\n').map((line, index) => (
+                  <p key={index}>{line}</p>
+                ))}
+              </div>
+            )
           ) : (
             <div className={styles.examples}>
               <div className={styles.exampleTitle}>💡 Exemples d'utilisation :</div>
