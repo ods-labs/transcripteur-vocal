@@ -1,5 +1,5 @@
 {
-  "name": "transcripteur-vocal",
+  "name": "VoixLà",
   "version": "1.0.0",
   "description": "Application de transcription vocale avec Gemini",
   "scripts": {

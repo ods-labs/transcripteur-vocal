@@ -14,6 +14,7 @@ interface CostData {
 
 export default function VoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false)
+  const [isPaused, setIsPaused] = useState(false)
   const [status, setStatus] = useState('Cliquez pour commencer l\'enregistrement')
   const [transcript, setTranscript] = useState('')
   const [error, setError] = useState('')
@@ -23,16 +24,19 @@ export default function VoiceRecorder() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [timer, setTimer] = useState('00:00')
   const [showRetryButton, setShowRetryButton] = useState(false)
+  const [canDownload, setCanDownload] = useState(false)
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
   const recordedAudioRef = useRef<Blob | null>(null)
   const startTimeRef = useRef<number>(0)
+  const pausedTimeRef = useRef<number>(0)
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const lastModelRef = useRef<string>('')
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const startTimer = useCallback(() => {
-    startTimeRef.current = Date.now()
+    startTimeRef.current = Date.now() - pausedTimeRef.current
     timerIntervalRef.current = setInterval(() => {
       const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000)
       const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0')
@@ -41,11 +45,21 @@ export default function VoiceRecorder() {
     }, 1000)
   }, [])
 
+  const pauseTimer = useCallback(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current)
+      timerIntervalRef.current = null
+      pausedTimeRef.current = Date.now() - startTimeRef.current
+    }
+  }, [])
+
   const stopTimer = useCallback(() => {
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current)
       timerIntervalRef.current = null
     }
+    pausedTimeRef.current = 0
+    setTimer('00:00')
   }, [])
 
   const startRecording = useCallback(async () => {
@@ -109,13 +123,84 @@ export default function VoiceRecorder() {
     }
   }, [isRecording, stopTimer])
 
+  const pauseRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording && !isPaused) {
+      mediaRecorderRef.current.pause()
+      setIsPaused(true)
+      setStatus('Enregistrement en pause - Cliquez pour reprendre')
+      pauseTimer()
+    }
+  }, [isRecording, isPaused, pauseTimer])
+
+  const resumeRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording && isPaused) {
+      mediaRecorderRef.current.resume()
+      setIsPaused(false)
+      setStatus('Enregistrement en cours... Cliquez pour arrêter')
+      startTimer()
+    }
+  }, [isRecording, isPaused, startTimer])
+
   const toggleRecording = useCallback(() => {
     if (isRecording) {
-      stopRecording()
+      if (isPaused) {
+        resumeRecording()
+      } else {
+        pauseRecording()
+      }
     } else {
       startRecording()
     }
-  }, [isRecording, startRecording, stopRecording])
+  }, [isRecording, isPaused, startRecording, pauseRecording, resumeRecording])
+
+  const finalStopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && (isRecording || isPaused)) {
+      mediaRecorderRef.current.stop()
+      setIsRecording(false)
+      setIsPaused(false)
+      setCanDownload(true)
+      stopTimer()
+      
+      // Arrêter le stream
+      mediaRecorderRef.current.stream?.getTracks().forEach(track => track.stop())
+    }
+  }, [isRecording, isPaused, stopTimer])
+
+  const downloadRecording = useCallback(() => {
+    if (recordedAudioRef.current) {
+      const url = URL.createObjectURL(recordedAudioRef.current)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `memo-vocal-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.webm`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    }
+  }, [])
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // Vérifier le type de fichier
+      const validTypes = ['audio/wav', 'audio/mp3', 'audio/mpeg', 'audio/webm', 'audio/ogg', 'audio/m4a', 'audio/aac']
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(wav|mp3|webm|ogg|m4a|aac)$/i)) {
+        setError('Type de fichier non supporté. Utilisez WAV, MP3, WEBM, OGG, M4A ou AAC.')
+        return
+      }
+
+      recordedAudioRef.current = file
+      setShowModelSelection(true)
+      setStatus('Fichier uploadé - Choisissez le modèle')
+      setCanDownload(false)
+      setError('')
+      setRetryError('')
+    }
+    // Reset du input pour permettre de re-upload le même fichier
+    if (event.target) {
+      event.target.value = ''
+    }
+  }, [])
 
   const processWithModel = useCallback(async (modelType: string) => {
     if (!recordedAudioRef.current) return
@@ -165,8 +250,14 @@ export default function VoiceRecorder() {
       if (isRetryableError) {
         setRetryError(`Le modèle ${modelType === 'flash' ? 'Gemini Flash' : 'Gemini Pro'} est surchargé. Vous pouvez ressayer dans quelques instants.`)
         setShowRetryButton(true)
+        // Effacer l'ancienne transcription pour éviter la confusion
+        setTranscript('')
+        setCostData(null)
       } else {
         setError('Erreur lors de la transcription: ' + error.message)
+        // Effacer l'ancienne transcription pour éviter la confusion
+        setTranscript('')
+        setCostData(null)
       }
     } finally {
       setIsProcessing(false)
@@ -281,29 +372,63 @@ export default function VoiceRecorder() {
 
   return (
     <div className={styles.container}>
-      <h1>🎙️ Transcripteur Vocal</h1>
+      <h1>🎙️ VoixLà</h1>
 
       <div className={styles.recorderSection}>
         <button 
           onClick={toggleRecording}
           className={`${styles.recordButton} ${
-            isRecording ? styles.recording : 
+            isRecording ? (isPaused ? styles.paused : styles.recording) : 
             isProcessing ? styles.processing : styles.idle
           }`}
         >
-          {isRecording ? '⏹️' : isProcessing ? '⏳' : '🎙️'}
+          {isRecording ? (isPaused ? '▶️' : '⏸️') : isProcessing ? '⏳' : '🎙️'}
         </button>
 
+        {(isRecording || isPaused) && (
+          <button 
+            onClick={finalStopRecording}
+            className={`${styles.stopButton}`}
+          >
+            ⏹️ Arrêter
+          </button>
+        )}
+
         <div className={`${styles.status} ${
-          isRecording ? styles.recording : 
+          isRecording ? (isPaused ? styles.paused : styles.recording) : 
           isProcessing ? styles.processing : styles.idle
         }`}>
           {status}
         </div>
 
-        {isRecording && (
+        {(isRecording || isPaused) && (
           <div className={styles.timer}>{timer}</div>
         )}
+
+        {canDownload && recordedAudioRef.current && (
+          <button 
+            onClick={downloadRecording}
+            className={styles.downloadButton}
+          >
+            💾 Télécharger le memo
+          </button>
+        )}
+      </div>
+
+      <div className={styles.uploadSection}>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="audio/*,.wav,.mp3,.webm,.ogg,.m4a,.aac"
+          onChange={handleFileUpload}
+          style={{ display: 'none' }}
+        />
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          className={styles.uploadButton}
+        >
+          📤 Uploader un fichier audio
+        </button>
       </div>
 
       {showModelSelection && (
@@ -325,6 +450,25 @@ export default function VoiceRecorder() {
               <div className={styles.modelInfo}>Gemini Pro - Lent mais qualité maximale</div>
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Messages d'erreur remontés pour être immédiatement visibles */}
+      {error && (
+        <div className={styles.error}>
+          {error}
+        </div>
+      )}
+
+      {retryError && (
+        <div className={styles.errorRetry}>
+          ⚠️ {retryError}
+          <br />
+          {showRetryButton && (
+            <button onClick={retryLastRequest} className={styles.retryButton}>
+              🔄 Ressayer la transcription
+            </button>
+          )}
         </div>
       )}
 
@@ -393,25 +537,13 @@ export default function VoiceRecorder() {
             💰 Coût: {costData.totalEUR.toFixed(6)}€ ({costData.model})
           </div>
         )}
-
-        {error && (
-          <div className={styles.error}>
-            {error}
-          </div>
-        )}
-
-        {retryError && (
-          <div className={styles.errorRetry}>
-            ⚠️ {retryError}
-            <br />
-            {showRetryButton && (
-              <button onClick={retryLastRequest} className={styles.retryButton}>
-                🔄 Ressayer la transcription
-              </button>
-            )}
-          </div>
-        )}
       </div>
+
+      <footer className={styles.footer}>
+        <div className={styles.footerContent}>
+          🧪 <strong>VoixLà</strong> est une expérimentation en cours... mais on peut déjà se dire que c'est la meilleure app de la <strong>DicTech</strong> ! 🚀
+        </div>
+      </footer>
     </div>
   )
 }

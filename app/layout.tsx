@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Transcripteur Vocal',
+  title: 'VoixLà',
   description: 'Application de transcription vocale avec Gemini AI',
 }
 
@@ -13,7 +13,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/favicon.svg" sizes="any" />
+      </head>
+      <body suppressHydrationWarning>{children}</body>
     </html>
   )
 }

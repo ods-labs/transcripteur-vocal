@@ -1,4 +1,4 @@
-# 🎙️ Transcripteur Vocal
+# 🎙️ VoixLà
 
 Application Next.js de transcription vocale utilisant l'API Gemini de Google.
 
