@@ -394,61 +394,69 @@ export default function VoiceRecorder() {
     <div className={styles.container}>
       <h1>🎙️ VoixLà</h1>
 
-      <div className={styles.recorderSection}>
-        <button 
-          onClick={toggleRecording}
-          className={`${styles.recordButton} ${
-            isRecording ? (isPaused ? styles.paused : styles.recording) : 
-            isProcessing ? styles.processing : styles.idle
-          }`}
-        >
-          {isRecording ? (isPaused ? '▶️' : '⏸️') : isProcessing ? '⏳' : '🎙️'}
-        </button>
-
-        {(isRecording || isPaused) && (
+      {/* Section Audio Compacte */}
+      <div className={styles.audioSection}>
+        <div className={styles.recordingControls}>
           <button 
-            onClick={finalStopRecording}
-            className={`${styles.stopButton}`}
+            onClick={toggleRecording}
+            className={`${styles.recordButton} ${
+              isRecording ? (isPaused ? styles.paused : styles.recording) : 
+              isProcessing ? styles.processing : styles.idle
+            }`}
           >
-            ⏹️ Arrêter
+            {isRecording ? (isPaused ? '▶️' : '⏸️') : isProcessing ? '⏳' : '🎙️'}
           </button>
-        )}
 
-        <div className={`${styles.status} ${
-          isRecording ? (isPaused ? styles.paused : styles.recording) : 
-          isProcessing ? styles.processing : styles.idle
-        }`}>
-          {status}
+          {(isRecording || isPaused) && (
+            <button 
+              onClick={finalStopRecording}
+              className={`${styles.stopButton}`}
+            >
+              ⏹️
+            </button>
+          )}
         </div>
 
-        {(isRecording || isPaused) && (
-          <div className={styles.timer}>{timer}</div>
-        )}
+        <div className={styles.statusArea}>
+          <div className={`${styles.status} ${
+            isRecording ? (isPaused ? styles.paused : styles.recording) : 
+            isProcessing ? styles.processing : styles.idle
+          }`}>
+            {status}
+          </div>
 
-        {canDownload && recordedAudioRef.current && (
-          <button 
-            onClick={downloadRecording}
-            className={styles.downloadButton}
-          >
-            💾 Télécharger le memo
-          </button>
-        )}
+          {(isRecording || isPaused) && (
+            <div className={styles.timer}>{timer}</div>
+          )}
+        </div>
       </div>
 
-      <div className={styles.uploadSection}>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="audio/*,.wav,.mp3,.webm,.ogg,.m4a,.aac"
-          onChange={handleFileUpload}
-          style={{ display: 'none' }}
-        />
-        <button 
-          onClick={() => fileInputRef.current?.click()}
-          className={styles.uploadButton}
-        >
-          📤 Uploader un fichier audio
-        </button>
+      {/* Section Fichiers */}
+      <div className={styles.filesSection}>
+        <div className={styles.fileActions}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="audio/*,.wav,.mp3,.webm,.ogg,.m4a,.aac"
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className={styles.uploadButton}
+          >
+            📤 Upload
+          </button>
+          
+          {canDownload && recordedAudioRef.current && (
+            <button 
+              onClick={downloadRecording}
+              className={styles.downloadButton}
+            >
+              💾 Download
+            </button>
+          )}
+        </div>
       </div>
 
       {showModelSelection && (
@@ -473,24 +481,26 @@ export default function VoiceRecorder() {
         </div>
       )}
 
-      {/* Messages d'erreur remontés pour être immédiatement visibles */}
-      {error && (
-        <div className={styles.error}>
-          {error}
-        </div>
-      )}
+      {/* Messages d'erreur et sélection de modèle */}
+      <div className={styles.messagesSection}>
+        {error && (
+          <div className={styles.error}>
+            {error}
+          </div>
+        )}
 
-      {retryError && (
-        <div className={styles.errorRetry}>
-          ⚠️ {retryError}
-          <br />
-          {showRetryButton && (
-            <button onClick={retryLastRequest} className={styles.retryButton}>
-              🔄 Ressayer la transcription
-            </button>
-          )}
-        </div>
-      )}
+        {retryError && (
+          <div className={styles.errorRetry}>
+            ⚠️ {retryError}
+            <br />
+            {showRetryButton && (
+              <button onClick={retryLastRequest} className={styles.retryButton}>
+                🔄 Ressayer
+              </button>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className={styles.transcriptSection}>
         <h3>Transcription :</h3>

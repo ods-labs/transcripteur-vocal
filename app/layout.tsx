@@ -17,7 +17,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="icon" href="/favicon.svg" sizes="any" />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body className={"body"} suppressHydrationWarning>{children}</body>
     </html>
   )
 }
