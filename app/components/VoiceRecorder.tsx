@@ -380,10 +380,10 @@ export default function VoiceRecorder() {
         {transcript && (
           <div className={styles.copyButtons}>
             <button onClick={copyMarkdown} className={`${styles.copyButton} ${styles.notion}`}>
-              📝 Copier Markdown (Notion)
+              📝 Copier pour Notion (MD)
             </button>
             <button onClick={copyFormatted} className={`${styles.copyButton} ${styles.html}`}>
-              ✨ Copier Formaté (Email/Word)
+              ✨ Copier pour Email/Word/Slack
             </button>
           </div>
         )}
