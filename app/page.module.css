@@ -197,22 +197,66 @@
   100% { transform: rotate(360deg); }
 }
 
+.copyButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
 .copyButton {
-  background: linear-gradient(135deg, #10ac84, #00d2d3);
-  color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 10px 16px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.3s ease;
-  margin-bottom: 15px;
+  flex: 1;
+  min-width: 140px;
+  max-width: 160px;
+  text-align: center;
 }
 
 .copyButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(16, 172, 132, 0.3);
+}
+
+.copyButton.slack {
+  background: linear-gradient(135deg, #4A154B, #611f69);
+  color: white;
+}
+
+.copyButton.slack:hover {
+  box-shadow: 0 4px 12px rgba(74, 21, 75, 0.3);
+}
+
+.copyButton.notion {
+  background: linear-gradient(135deg, #000000, #37352f);
+  color: white;
+}
+
+.copyButton.notion:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.copyButton.html {
+  background: linear-gradient(135deg, #1f77b4, #2e86ab);
+  color: white;
+}
+
+.copyButton.html:hover {
+  box-shadow: 0 4px 12px rgba(31, 119, 180, 0.3);
+}
+
+.copyButton.plain {
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: white;
+}
+
+.copyButton.plain:hover {
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
 .costInfo {
@@ -284,6 +328,18 @@
 
   .modelButtons {
     flex-direction: column;
+  }
+
+  .copyButtons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .copyButton {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+    font-size: 0.8rem;
   }
 }
 

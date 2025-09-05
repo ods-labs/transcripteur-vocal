@@ -198,17 +198,86 @@ export default function VoiceRecorder() {
     return markdownIndicators.some(pattern => pattern.test(text))
   }, [])
 
-  const copyToClipboard = useCallback(async () => {
+
+  // Copier le markdown brut (pour Notion)
+  const copyMarkdown = useCallback(async () => {
     if (!transcript) return
     
     try {
       await navigator.clipboard.writeText(transcript)
-      // Feedback visuel temporaire
     } catch (error) {
-      console.error('Erreur de copie:', error)
+      console.error('Erreur de copie markdown:', error)
       setError('Impossible de copier dans le presse-papier')
     }
   }, [transcript])
+
+  // Copier le texte formaté directement depuis la zone d'affichage
+  const copyFormatted = useCallback(async () => {
+    console.log('🔄 copyFormatted - Début')
+    if (!transcript) {
+      console.log('❌ Pas de transcript')
+      return
+    }
+    
+    try {
+      let targetContainer: HTMLElement | null = null
+      
+      console.log('📝 isMarkdown:', isMarkdown(transcript))
+      
+      if (isMarkdown(transcript)) {
+        // Chercher avec le module CSS
+        targetContainer = document.querySelector(`[class*="markdown"]`) as HTMLElement
+        console.log('🎯 Recherche [class*="markdown"]:', !!targetContainer)
+        if (!targetContainer) {
+          // Fallback: chercher directement dans le transcriptBox
+          targetContainer = document.querySelector(`[class*="transcriptBox"] [class*="markdown"]`) as HTMLElement
+          console.log('🎯 Recherche dans transcriptBox:', !!targetContainer)
+        }
+      } else {
+        targetContainer = document.querySelector(`[class*="plainText"]`) as HTMLElement
+        console.log('🎯 Recherche [class*="plainText"]:', !!targetContainer)
+      }
+      
+      if (targetContainer) {
+        console.log('✅ Container trouvé:', targetContainer.tagName)
+        console.log('📄 Contenu HTML:', targetContainer.innerHTML.substring(0, 100) + '...')
+        
+        // Sélectionner le contenu de la zone d'affichage
+        const selection = window.getSelection()
+        const range = document.createRange()
+        range.selectNodeContents(targetContainer)
+        selection?.removeAllRanges()
+        selection?.addRange(range)
+        
+        console.log('🖱️ Sélection créée, texte sélectionné:', selection?.toString().substring(0, 50) + '...')
+        
+        // Utiliser execCommand pour copier le formatage riche
+        const success = document.execCommand('copy')
+        console.log('📋 execCommand result:', success)
+        selection?.removeAllRanges()
+        
+        if (!success) {
+          throw new Error('execCommand failed')
+        }
+        console.log('✅ Copie réussie avec formatage')
+      } else {
+        console.log('❌ Container non trouvé, fallback vers clipboard.writeText')
+        // Fallback si la zone n'est pas trouvée
+        await navigator.clipboard.writeText(transcript)
+      }
+      
+    } catch (error) {
+      console.error('❌ Erreur de copie formatée:', error)
+      // Fallback vers le markdown brut
+      try {
+        await navigator.clipboard.writeText(transcript)
+        console.log('📋 Fallback vers markdown brut réussi')
+      } catch (fallbackError) {
+        console.error('❌ Fallback échoué aussi:', fallbackError)
+        setError('Impossible de copier dans le presse-papier')
+      }
+    }
+  }, [transcript, isMarkdown])
 
   return (
     <div className={styles.container}>
@@ -309,9 +378,14 @@ export default function VoiceRecorder() {
         </div>
         
         {transcript && (
-          <button onClick={copyToClipboard} className={styles.copyButton}>
-            📋 Copier
-          </button>
+          <div className={styles.copyButtons}>
+            <button onClick={copyMarkdown} className={`${styles.copyButton} ${styles.notion}`}>
+              📝 Copier Markdown (Notion)
+            </button>
+            <button onClick={copyFormatted} className={`${styles.copyButton} ${styles.html}`}>
+              ✨ Copier Formaté (Email/Word)
+            </button>
+          </div>
         )}
 
         {costData && (
