@@ -83,7 +83,11 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
         // Si autres erreurs retryables
         const isRetryableError = error.message?.includes('503') || 
                                error.message?.includes('overloaded') ||
-                               error.message?.includes('500')
+                               error.message?.includes('500') ||
+                               error.message?.includes('502') ||
+                               error.message?.includes('504') ||
+                               error.message?.includes('timeout') ||
+                               error.message?.includes('network')
         
         if (isRetryableError) {
           // Retry simple avec délai

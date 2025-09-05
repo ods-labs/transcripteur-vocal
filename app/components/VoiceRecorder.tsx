@@ -242,20 +242,40 @@ export default function VoiceRecorder() {
     } catch (error: any) {
       console.error('Erreur:', error)
       
-      const isRetryableError = error.message.includes('503') || 
-                             error.message.includes('overloaded') ||
-                             error.message.includes('500') ||
-                             error.message.includes('429')
+      // Erreurs spécifiquement connues comme retryables
+      const isKnownRetryableError = error.message.includes('503') || 
+                                   error.message.includes('overloaded') ||
+                                   error.message.includes('500') ||
+                                   error.message.includes('429') ||
+                                   error.message.includes('502') ||
+                                   error.message.includes('504') ||
+                                   error.message.includes('timeout') ||
+                                   error.message.includes('network')
       
-      if (isRetryableError) {
+      // Erreurs définitivement non-retryables
+      const isNonRetryableError = error.message.includes('401') ||
+                                 error.message.includes('403') ||
+                                 error.message.includes('invalid') ||
+                                 error.message.includes('not found') ||
+                                 error.message.includes('permission') ||
+                                 error.message.includes('unauthorized') ||
+                                 error.message.includes('forbidden')
+      
+      if (isKnownRetryableError) {
         setRetryError(`Le modèle ${modelType === 'flash' ? 'Gemini Flash' : 'Gemini Pro'} est surchargé. Vous pouvez ressayer dans quelques instants.`)
         setShowRetryButton(true)
         // Effacer l'ancienne transcription pour éviter la confusion
         setTranscript('')
         setCostData(null)
-      } else {
+      } else if (isNonRetryableError) {
+        // Erreurs définitives - pas de retry
         setError('Erreur lors de la transcription: ' + error.message)
-        // Effacer l'ancienne transcription pour éviter la confusion
+        setTranscript('')
+        setCostData(null)
+      } else {
+        // Erreurs inconnues - proposer un retry par défaut
+        setRetryError(`Une erreur inattendue s'est produite: ${error.message}. Vous pouvez essayer de relancer la transcription.`)
+        setShowRetryButton(true)
         setTranscript('')
         setCostData(null)
       }
