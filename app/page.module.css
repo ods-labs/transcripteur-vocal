@@ -719,3 +719,482 @@
     color: #667eea;
     font-weight: 700;
 }
+
+/* Styles pour la notification de sauvegarde */
+.backupNotification {
+    background: linear-gradient(135deg, #e8f5e8, #d4edda);
+    border: 2px solid #27ae60;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 15px 0;
+    color: #155724;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.2);
+}
+
+.backupActions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.restoreButton {
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 140px;
+    max-width: 200px;
+}
+
+.restoreButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+}
+
+.dismissButton {
+    background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    flex: 1;
+    min-width: 100px;
+    max-width: 120px;
+}
+
+.dismissButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(149, 165, 166, 0.3);
+}
+
+/* Styles pour la section upgrade vers Pro */
+.upgradeSection {
+    background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
+    border: 2px solid #667eea;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 15px 0;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.upgradeText {
+    color: #495057;
+    font-size: 0.9rem;
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+}
+
+.upgradeButton {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+}
+
+.upgradeButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.upgradeButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* === STYLES POUR L'HISTORIQUE === */
+.historySection {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f1f1f1;
+    width: 100%;
+}
+
+.historyHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.historyHeader h3 {
+    color: #333;
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.clearHistoryButton {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.clearHistoryButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+}
+
+.historyList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.historyItem {
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.historyItem:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.historyItemHeader {
+    padding: 16px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    transition: background 0.2s ease;
+}
+
+.historyItemHeader:hover {
+    background: #f8f9fa;
+}
+
+.historyItemInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.historyItemPreview {
+    color: #333;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    word-break: break-word;
+}
+
+.historyItemMeta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.modelBadge {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-weight: 600;
+    color: white;
+}
+
+.modelBadge.flash {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+}
+
+.modelBadge.pro {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.historyTime {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.historyItemActions {
+    display: flex;
+    align-items: center;
+}
+
+.expandButton {
+    background: transparent;
+    border: none;
+    color: #667eea;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.expandButton:hover {
+    background: #e8f0fe;
+    color: #4285f4;
+}
+
+.historyItemContent {
+    border-top: 1px solid #e9ecef;
+    background: #fafbfc;
+}
+
+.historyTranscript {
+    padding: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.historyItemFooter {
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.historyButtons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.historyButton {
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.historyButton.restore {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.historyButton.restore:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
+}
+
+.historyButton.copy {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+}
+
+.historyButton.copy:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(23, 162, 184, 0.3);
+}
+
+.historyButton.delete {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.historyButton.delete:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+}
+
+.historyCost {
+    font-size: 0.8rem;
+    color: #28a745;
+    font-weight: 600;
+    font-family: monospace;
+}
+
+.historyDate {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 600px) {
+    .historySection {
+        margin-top: 30px;
+        padding-top: 20px;
+    }
+    
+    .historyHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .historyHeader h3 {
+        font-size: 1.1rem;
+    }
+    
+    .clearHistoryButton {
+        align-self: flex-end;
+        padding: 10px 16px;
+    }
+    
+    .historyItemHeader {
+        padding: 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    
+    .historyItemActions {
+        align-self: flex-end;
+    }
+    
+    .historyItemPreview {
+        font-size: 0.85rem;
+    }
+    
+    .historyItemMeta {
+        gap: 8px;
+    }
+    
+    .historyTranscript {
+        padding: 15px;
+        font-size: 0.85rem;
+    }
+    
+    .historyItemFooter {
+        padding: 12px 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .historyButtons {
+        gap: 6px;
+    }
+    
+    .historyButton {
+        flex: 1;
+        text-align: center;
+        padding: 10px 8px;
+        font-size: 0.75rem;
+    }
+    
+    .historyCost, .historyDate {
+        text-align: center;
+        font-size: 0.75rem;
+    }
+}
+
+/* Responsive pour mobile */
+@media (max-width: 600px) {
+    .upgradeSection {
+        margin: 12px 0;
+        padding: 14px;
+    }
+    
+    .upgradeText {
+        font-size: 0.85rem;
+    }
+    
+    .upgradeButton {
+        padding: 12px 16px;
+        font-size: 0.85rem;
+        width: 100%;
+        max-width: 280px;
+    }
+}
+
+/* Styles pour le suivi de taille de fichier */
+.fileSizeSection {
+    margin-top: 15px;
+    padding: 12px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    text-align: center;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.fileSizeText {
+    font-size: 0.9rem;
+    color: #495057;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.progressBarContainer {
+    background: #e9ecef;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+    margin: 8px 0;
+    position: relative;
+}
+
+.progressBar {
+    height: 100%;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border-radius: 10px;
+    transition: width 0.3s ease, background 0.3s ease;
+    min-width: 2px;
+}
+
+.progressBar.warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+}
+
+.progressBar.danger {
+    background: linear-gradient(135deg, #dc3545, #e74c3c);
+    animation: pulse 1s infinite;
+}
+
+.progressText {
+    font-size: 0.8rem;
+    color: #6c757d;
+    font-weight: 600;
+}
+
+/* Responsive pour mobile */
+@media (max-width: 600px) {
+    .fileSizeSection {
+        max-width: none;
+        margin: 10px 0;
+        padding: 10px;
+    }
+    
+    .fileSizeText {
+        font-size: 0.8rem;
+    }
+    
+    .progressText {
+        font-size: 0.75rem;
+    }
+}

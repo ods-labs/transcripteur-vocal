@@ -5,16 +5,33 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
+    // Timeout pour les requêtes longues (10 minutes)
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 10 * 60 * 1000)
+    
     const formData = await request.formData()
     const audioFile = formData.get('audio') as File
     const selectedModel = (formData.get('model') as string) || 'pro'
 
     if (!audioFile) {
+      clearTimeout(timeout)
       return NextResponse.json(
         { error: 'Aucun fichier audio fourni' },
         { status: 400 }
       )
     }
+
+    // Validation de la taille (max 50MB pour éviter les timeouts)
+    const maxSize = 50 * 1024 * 1024 // 50MB
+    if (audioFile.size > maxSize) {
+      clearTimeout(timeout)
+      return NextResponse.json(
+        { error: `Fichier trop volumineux (${Math.round(audioFile.size / 1024 / 1024)}MB). Maximum: 50MB` },
+        { status: 413 }
+      )
+    }
+
+    console.log(`📁 Fichier audio reçu: ${audioFile.name} (${Math.round(audioFile.size / 1024)}KB, ${audioFile.type})`)
 
     // Convertir le fichier en base64
     const arrayBuffer = await audioFile.arrayBuffer()
@@ -102,11 +119,17 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
     }
 
     const { result, actualModel, modelName, fallback } = await generateWithFallback()
+    clearTimeout(timeout)
+    
     if (!result) {
       throw new Error('Aucune réponse du modèle')
     }
     
     const generatedText = result.response.text()
+    
+    if (!generatedText || generatedText.trim().length === 0) {
+      throw new Error('Réponse vide du modèle')
+    }
     
     // Récupérer les métadonnées d'usage
     const usageMetadata = result.response.usageMetadata || {
@@ -125,6 +148,8 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
     const outputCostUSD = (usageMetadata.candidatesTokenCount || 0) * pricing.output / divisor
     const totalCostUSD = inputCostUSD + outputCostUSD
     const totalCostEUR = totalCostUSD * 0.92 // Approximation USD->EUR
+
+    console.log(`✅ Transcription réussie (${Math.round(audioFile.size / 1024)}KB -> ${generatedText.length} chars, ${modelName})`)
     
     return NextResponse.json({
       success: true,
@@ -141,14 +166,32 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
     })
 
   } catch (error: any) {
-    console.error('Erreur lors de la rédaction:', error)
+    console.error('❌ Erreur lors de la rédaction:', error)
+    
+    // Messages d'erreur plus spécifiques
+    let errorMessage = error.message || 'Erreur inconnue'
+    let statusCode = 500
+    
+    if (error.message?.includes('The string did not match the expected pattern')) {
+      errorMessage = 'Format audio non supporté ou fichier corrompu'
+      statusCode = 400
+    } else if (error.message?.includes('Request Entity Too Large')) {
+      errorMessage = 'Fichier audio trop volumineux'
+      statusCode = 413
+    } else if (error.message?.includes('timeout') || error.message?.includes('AbortError')) {
+      errorMessage = 'Timeout: le fichier audio est trop long à traiter'
+      statusCode = 408
+    } else if (error.message?.includes('429') || error.message?.includes('quota')) {
+      errorMessage = 'Quota API dépassé, réessayez plus tard'
+      statusCode = 429
+    }
     
     return NextResponse.json(
       {
         success: false,
-        error: 'Erreur lors de la rédaction: ' + error.message
+        error: errorMessage
       },
-      { status: 500 }
+      { status: statusCode }
     )
   }
 }
