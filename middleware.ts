@@ -8,9 +8,10 @@ export function middleware(request: NextRequest) {
   }
   
   const forwarded = request.headers.get('x-forwarded-for');
+  const realIP = request.headers.get('x-real-ip');
   const clientIP = forwarded 
     ? forwarded.split(',')[0].trim() 
-    : request.ip || '127.0.0.1';
+    : realIP || '127.0.0.1';
   
   // En développement local, autoriser localhost/127.0.0.1
   const isLocalhost = ['127.0.0.1', '::1', 'localhost'].includes(clientIP) || 
