@@ -409,6 +409,7 @@ export default function VoiceRecorder() {
         setRetryError('')
         setShowRetryButton(false)
         
+        let result: any
         try {
             const formData = new FormData()
 
@@ -432,7 +433,6 @@ export default function VoiceRecorder() {
                 signal: AbortSignal.timeout(5 * 60 * 1000)
             })
 
-            let result: any
             const contentType = response.headers.get('content-type')
 
             if (contentType && contentType.includes('application/json')) {
