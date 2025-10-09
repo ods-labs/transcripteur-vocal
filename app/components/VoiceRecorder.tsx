@@ -310,26 +310,18 @@ export default function VoiceRecorder() {
         try {
             let targetContainer: HTMLElement | null = null
 
-            console.log('📝 isMarkdown:', isMarkdown(transcript))
-
             if (isMarkdown(transcript)) {
                 // Chercher avec le module CSS
                 targetContainer = document.querySelector(`[class*="markdown"]`) as HTMLElement
-                console.log('🎯 Recherche [class*="markdown"]:', !!targetContainer)
                 if (!targetContainer) {
                     // Fallback: chercher directement dans le transcriptBox
                     targetContainer = document.querySelector(`[class*="transcriptBox"] [class*="markdown"]`) as HTMLElement
-                    console.log('🎯 Recherche dans transcriptBox:', !!targetContainer)
                 }
             } else {
                 targetContainer = document.querySelector(`[class*="plainText"]`) as HTMLElement
-                console.log('🎯 Recherche [class*="plainText"]:', !!targetContainer)
             }
 
             if (targetContainer) {
-                console.log('✅ Container trouvé:', targetContainer.tagName)
-                console.log('📄 Contenu HTML:', targetContainer.innerHTML.substring(0, 100) + '...')
-
                 // Sélectionner le contenu de la zone d'affichage
                 const selection = window.getSelection()
                 const range = document.createRange()
@@ -337,11 +329,8 @@ export default function VoiceRecorder() {
                 selection?.removeAllRanges()
                 selection?.addRange(range)
 
-                console.log('🖱️ Sélection créée, texte sélectionné:', selection?.toString().substring(0, 50) + '...')
-
                 // Utiliser execCommand pour copier le formatage riche
                 const success = document.execCommand('copy')
-                console.log('📋 execCommand result:', success)
                 selection?.removeAllRanges()
 
                 if (!success) {
@@ -376,7 +365,6 @@ export default function VoiceRecorder() {
             if (savedHistory) {
                 const parsedHistory: HistoryItem[] = JSON.parse(savedHistory)
                 setHistory(parsedHistory.slice(0, 50)) // Limiter à 50 éléments
-                console.log(`📚 Historique chargé: ${parsedHistory.length} éléments`)
             }
         } catch (e) {
             console.warn('Erreur lors du chargement de l\'historique:', e)
@@ -420,8 +408,7 @@ export default function VoiceRecorder() {
         setError('')
         setRetryError('')
         setShowRetryButton(false)
-
-
+        
         try {
             const formData = new FormData()
 
@@ -433,8 +420,10 @@ export default function VoiceRecorder() {
 
             formData.append('audio', recordedAudioRef.current, 'recording.webm')
             formData.append('model', modelType)
-
-            console.log(`🚀 Envoi de l'audio (${Math.round(recordedAudioRef.current.size / 1024)}KB) vers ${modelType}...`)
+            
+            // Toujours envoyer le transcript existant (vide ou non)
+            const existingText = transcript || ''
+            formData.append('existingText', existingText)
 
             const response = await fetch('/api/transcribe', {
                 method: 'POST',
@@ -469,7 +458,8 @@ export default function VoiceRecorder() {
                     setRetryError(`ℹ️ ${result.fallback}`)
                     setShowRetryButton(false) // Pas de bouton retry pour fallback automatique
                 }
-                setStatus('Transcription terminée')
+                
+                setStatus(`${existingText ? 'Transcription complétée' : 'Transcription terminée'}. Compléter votre transcription avec un nouvel enregistrement`)
 
                 // Sauvegarder dans l'historique
                 saveToHistory(result.content, modelType, result.cost)
@@ -503,28 +493,27 @@ export default function VoiceRecorder() {
             if (isKnownRetryableError) {
                 setRetryError(`Le modèle ${modelType === 'flash' ? 'Gemini Flash' : 'Gemini Pro'} est surchargé. Vous pouvez ressayer dans quelques instants.`)
                 setShowRetryButton(true)
-                // Effacer l'ancienne transcription pour éviter la confusion
-                setTranscript('')
+                // En cas d'erreur, garder le transcript existant
                 setCostData(null)
             } else if (isNonRetryableError) {
                 // Erreurs définitives - pas de retry
                 setError('Erreur lors de la transcription: ' + error.message)
-                setTranscript('')
                 setCostData(null)
             } else {
                 // Erreurs inconnues - proposer un retry par défaut
                 setRetryError(`Une erreur inattendue s'est produite: ${error.message}. Vous pouvez essayer de relancer la transcription.`)
                 setShowRetryButton(true)
-                setTranscript('')
                 setCostData(null)
             }
         } finally {
             setIsProcessing(false)
             if (!retryError && !error) {
-                setStatus('Cliquez pour commencer l\'enregistrement')
+                // Changer le message selon s'il y a déjà une transcription ou non
+                const newStatus = result && result.content ? 'Compléter votre transcription avec un nouvel enregistrement' : 'Cliquez pour commencer l\'enregistrement'
+                setStatus(newStatus)
             }
         }
-    }, [saveToHistory])
+    }, [transcript, saveToHistory])
 
     const retryLastRequest = useCallback(async () => {
         if (!recordedAudioRef.current || !lastModelRef.current) return
@@ -541,7 +530,6 @@ export default function VoiceRecorder() {
 
             try {
                 localStorage.setItem('voixla_history', JSON.stringify(newHistory))
-                console.log(`🗑️ Élément supprimé de l'historique`)
             } catch (e) {
                 console.warn('Erreur lors de la suppression:', e)
             }
@@ -556,7 +544,6 @@ export default function VoiceRecorder() {
         setExpandedHistoryItems(new Set())
         try {
             localStorage.removeItem('voixla_history')
-            console.log(`🧹 Historique vidé`)
         } catch (e) {
             console.warn('Erreur lors du vidage:', e)
         }
@@ -586,9 +573,30 @@ export default function VoiceRecorder() {
         })
     }, [])
 
+    // Commencer une nouvelle transcription (effacer l'existante)
+    const startNewTranscription = useCallback(() => {
+        setTranscript('')
+        setCostData(null)
+        setError('')
+        setRetryError('')
+        setShowRetryButton(false)
+        setStatus('Cliquez pour commencer l\'enregistrement')
+    }, [])
+
     return (
         <div className={styles.container}>
             <h1>🎙️ VoixLà</h1>
+
+            {/* Bouton nouvelle transcription flottant */}
+            {transcript && !isRecording && !isPaused && !isProcessing && !showModelSelection && (
+                <button 
+                    onClick={startNewTranscription}
+                    className={styles.floatingNewButton}
+                    title="Nouvelle transcription"
+                >
+                    🆕
+                </button>
+            )}
 
             {/* Section Audio Compacte */}
             <div className={styles.audioSection}>
@@ -643,6 +651,13 @@ export default function VoiceRecorder() {
                         </div>
                     )}
                 </div>
+                
+                {/* Message d'information sur le mode complément */}
+                {!isRecording && !isPaused && !isProcessing && !showModelSelection && transcript && (
+                    <div className={styles.infoMessage}>
+                        💡 Par défaut, un nouveau mémo complète la transcription existante
+                    </div>
+                )}
             </div>
 
             {/* Section Fichiers */}
@@ -777,6 +792,7 @@ export default function VoiceRecorder() {
                                 ✨ Copier pour Email/Word/Slack
                             </button>
                         </div>
+
 
                         {/* Bouton pour réessayer avec Pro après Flash */}
                         {recordedAudioRef.current && lastModelRef.current === 'flash' && !isProcessing && (

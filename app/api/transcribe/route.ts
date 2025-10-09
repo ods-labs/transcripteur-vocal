@@ -12,7 +12,9 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const audioFile = formData.get('audio') as File
     const selectedModel = (formData.get('model') as string) || 'pro'
-
+    const existingTextRaw = formData.get('existingText')
+    const existingText = existingTextRaw ? String(existingTextRaw) : null
+    
     if (!audioFile) {
       clearTimeout(timeout)
       return NextResponse.json(
@@ -31,8 +33,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`📁 Fichier audio reçu: ${audioFile.name} (${Math.round(audioFile.size / 1024)}KB, ${audioFile.type})`)
-
     // Convertir le fichier en base64
     const arrayBuffer = await audioFile.arrayBuffer()
     const audioData = Buffer.from(arrayBuffer).toString('base64')
@@ -44,7 +44,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const prompt = `Tu es un assistant de rédaction expert. Dans ce fichier audio, la personne te donne un brief oral contenant :
+    // Créer le prompt selon le mode (nouveau ou complément)
+    let prompt: string
+    
+    if (existingText && existingText.trim()) {
+      // Mode complément
+      prompt = `Tu es un assistant de rédaction expert. Tu as déjà produit ce texte :
+
+==================
+TEXTE EXISTANT :
+${existingText}
+==================
+
+Dans ce fichier audio, la personne te donne des instructions pour MODIFIER/COMPLÉTER ce texte existant.
+
+Les instructions peuvent être :
+- Modifier le formatage (mettre en gras, italique, etc.)
+- Ajouter de nouvelles informations
+- Réorganiser le contenu
+- Changer le style ou le ton
+- Corriger ou préciser certains points
+- Continuer le texte avec de nouveaux éléments
+
+TON RÔLE :
+1. Prendre le TEXTE EXISTANT ci-dessus comme base
+2. Appliquer EXACTEMENT les instructions données dans l'audio
+3. Si c'est un changement de formatage : appliquer le formatage au texte existant
+4. Si c'est un ajout : intégrer harmonieusement avec le texte existant
+5. Produire un texte COMPLET qui respecte les nouvelles instructions
+
+IMPORTANT : 
+- Réponds UNIQUEMENT avec le texte final modifié/complété
+- N'ajoute AUCUNE explication du type "voici le texte modifié"
+- Applique les instructions à la lettre
+- Garde tout le contenu original sauf si explicitement demandé de le changer`
+    } else {
+      // Mode création classique
+      prompt = `Tu es un assistant de rédaction expert. Dans ce fichier audio, la personne te donne un brief oral contenant :
 
 CONSIGNES possibles :
 - Type de contenu (email, article, présentation, rapport, etc.)
@@ -66,6 +102,7 @@ TON RÔLE :
 4. Sauf indication contraire, formater le texte pour être prêt à copier coller dans un editeur de texte ou slack
 
 IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être utilisé. Si les consignes sont imprécises, fais de ton mieux pour interpréter l'intention et rédige un contenu de qualité.`
+    }
 
     // Fonction de génération avec fallback automatique
     const generateWithFallback = async () => {
@@ -140,8 +177,8 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
     
     // Calculer le coût en euros (prix 2025)
     const pricing = selectedModel === 'flash' 
-      ? { input: 0.004, output: 0.020 } // Flash: $0.004/$0.020 per 1K tokens
-      : { input: 4, output: 20 }       // Pro: $4/$20 per 1M tokens
+      ? { input: 1, output: 2.5 } // Flash: $0.004/$2.5 per 1K tokens
+      : { input: 1.25, output: 10 }       // Pro: $1.25/$10 per 1M tokens
         
     const divisor = selectedModel === 'flash' ? 1000 : 1000000
     const inputCostUSD = (usageMetadata.promptTokenCount || 0) * pricing.input / divisor
