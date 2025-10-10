@@ -177,10 +177,10 @@ IMPORTANT : Réponds uniquement avec le texte final rédigé, prêt à être uti
     
     // Calculer le coût en euros (prix 2025)
     const pricing = selectedModel === 'flash' 
-      ? { input: 1, output: 2.5 } // Flash: $0.004/$2.5 per 1K tokens
-      : { input: 1.25, output: 10 }       // Pro: $1.25/$10 per 1M tokens
+      ? { input: 0.30, output: 2.5 } // Flash: $0.30/$2.5 per 1M tokens
+      : { input: 1.25, output: 10 }  // Pro: $1.25/$10 per 1M tokens
         
-    const divisor = selectedModel === 'flash' ? 1000 : 1000000
+    const divisor = 1000000 // Les deux modèles sont facturés par 1M tokens
     const inputCostUSD = (usageMetadata.promptTokenCount || 0) * pricing.input / divisor
     const outputCostUSD = (usageMetadata.candidatesTokenCount || 0) * pricing.output / divisor
     const totalCostUSD = inputCostUSD + outputCostUSD
