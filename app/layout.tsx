@@ -36,7 +36,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={"body"} suppressHydrationWarning>{children}</body>
+      <body className={"body"} suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   )
 }
