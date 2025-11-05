@@ -38,6 +38,10 @@ export default function VoiceRecorder() {
     const [fileSizeFormatted, setFileSizeFormatted] = useState('0 KB')
     const [history, setHistory] = useState<HistoryItem[]>([])
     const [expandedHistoryItems, setExpandedHistoryItems] = useState<Set<string>>(new Set())
+    const [isEditing, setIsEditing] = useState(false)
+    const [editBuffer, setEditBuffer] = useState('')
+    const [showExamples, setShowExamples] = useState(true)
+    const [hasInteracted, setHasInteracted] = useState(false)
 
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const audioChunksRef = useRef<Blob[]>([])
@@ -398,6 +402,56 @@ export default function VoiceRecorder() {
         })
     }, [])
 
+    // Mettre à jour le dernier élément de l'historique avec le contenu corrigé
+    const updateLastHistoryItem = useCallback((newContent: string) => {
+        if (!newContent || newContent.trim().length === 0) return
+
+        setHistory(prevHistory => {
+            if (prevHistory.length === 0) return prevHistory
+
+            const updatedHistory = [...prevHistory]
+            const lastItem = updatedHistory[0]
+
+            updatedHistory[0] = {
+                ...lastItem,
+                content: newContent.trim(),
+                preview: newContent.trim().substring(0, 100).replace(/\n/g, ' ')
+            }
+
+            try {
+                localStorage.setItem('voixla_history', JSON.stringify(updatedHistory))
+                console.log('💾 Historique mis à jour avec les corrections')
+            } catch (e) {
+                console.warn('Erreur lors de la sauvegarde:', e)
+            }
+
+            return updatedHistory
+        })
+    }, [])
+
+    // Valider l'édition du transcript
+    const handleValidation = useCallback((contentToValidate?: string) => {
+        const trimmedContent = (contentToValidate || editBuffer).trim()
+
+        if (trimmedContent !== transcript) {
+            // Contenu a été modifié (peut être vide)
+            setTranscript(trimmedContent)
+
+            // Mettre à jour l'historique SEULEMENT si contenu non-vide ET correspond au dernier item
+            if (trimmedContent && history.length > 0 && history[0].content === transcript) {
+                updateLastHistoryItem(trimmedContent)
+                console.log('✅ Transcription IA éditée et sauvegardée')
+            } else if (!trimmedContent) {
+                console.log('ℹ️ Transcript vidé')
+            } else {
+                console.log('ℹ️ Texte manuel ou nouveau - pas de mise à jour historique')
+            }
+        }
+
+        setIsEditing(false)
+        setEditBuffer('')
+    }, [editBuffer, transcript, history, updateLastHistoryItem])
+
     const processWithModel = useCallback(async (modelType: string) => {
         if (!recordedAudioRef.current) return
 
@@ -451,6 +505,10 @@ export default function VoiceRecorder() {
 
             if (response.ok && result.success) {
                 setTranscript(result.content)
+                setHasInteracted(true)
+                setShowExamples(false)
+                setIsEditing(false)
+                setEditBuffer('')
                 if (result.cost) {
                     setCostData(result.cost)
                 }
@@ -458,7 +516,7 @@ export default function VoiceRecorder() {
                     setRetryError(`ℹ️ ${result.fallback}`)
                     setShowRetryButton(false) // Pas de bouton retry pour fallback automatique
                 }
-                
+
                 setStatus(`${existingText ? 'Transcription complétée' : 'Transcription terminée'}. Compléter votre transcription avec un nouvel enregistrement`)
 
                 // Sauvegarder dans l'historique
@@ -576,6 +634,9 @@ export default function VoiceRecorder() {
     // Commencer une nouvelle transcription (effacer l'existante)
     const startNewTranscription = useCallback(() => {
         setTranscript('')
+        setEditBuffer('')
+        setHasInteracted(false)
+        setShowExamples(true)
         setCostData(null)
         setError('')
         setRetryError('')
@@ -734,51 +795,142 @@ export default function VoiceRecorder() {
 
             <div className={styles.transcriptSection}>
                 <h3>Transcription :</h3>
-                <div className={`${styles.transcriptBox} ${transcript ? styles.hasContent : ''}`}>
+                <div className={`${styles.transcriptBox} ${transcript ? styles.hasContent : ''} ${isEditing ? styles.editing : ''}`}
+                    style={{ position: 'relative' }}>
                     {isProcessing ? (
                         <div className={styles.loading}>
                             <div className={styles.loader}></div>
                             Transcription en cours...
                         </div>
-                    ) : transcript ? (
-                        isMarkdown(transcript) ? (
-                            <div className={styles.markdown}>
-                                <ReactMarkdown>
-                                    {transcript}
-                                </ReactMarkdown>
-                            </div>
-                        ) : (
-                            <div className={styles.plainText}>
-                                {transcript.split('\n').map((line, index) => (
-                                    <p key={index}>{line}</p>
-                                ))}
-                            </div>
-                        )
                     ) : (
-                        <div className={styles.examples}>
-                            <div className={styles.exampleTitle}>💡 Exemples d'utilisation :</div>
+                        <>
+                            {/* Affichage des exemples */}
+                            {showExamples && !transcript && !isEditing && (
+                                <div className={styles.examples}>
+                                    <div className={styles.exampleTitle}>💡 Exemples d'utilisation :</div>
 
-                            <div className={styles.exampleItem}>
-                                <strong>📧 Email professionnel :</strong><br/>
-                                "Rédige un email pour mon client, ton professionnel, pour reporter notre réunion de
-                                demain..."
-                            </div>
+                                    <div className={styles.exampleItem}>
+                                        <strong>📧 Email professionnel :</strong><br/>
+                                        "Rédige un email pour mon client, ton professionnel, pour reporter notre réunion de demain..."
+                                    </div>
 
-                            <div className={styles.exampleItem}>
-                                <strong>📝 Article de blog :</strong><br/>
-                                "Écris un article sur les tendances IA 2025, style décontracté, 500 mots environ..."
-                            </div>
+                                    <div className={styles.exampleItem}>
+                                        <strong>📝 Article de blog :</strong><br/>
+                                        "Écris un article sur les tendances IA 2025, style décontracté, 500 mots environ..."
+                                    </div>
 
-                            <div className={styles.exampleItem}>
-                                <strong>💬 Message Slack :</strong><br/>
-                                "Résume les points clés de notre réunion d'équipe, format court pour Slack..."
-                            </div>
+                                    <div className={styles.exampleItem}>
+                                        <strong>💬 Message Slack :</strong><br/>
+                                        "Résume les points clés de notre réunion d'équipe, format court pour Slack..."
+                                    </div>
 
-                            <div className={styles.exampleItem}>
-                                <strong>📋 Rapport :</strong><br/>
-                                "Transforme mes notes en rapport structuré pour la direction, ton formel..."
-                            </div>
-                        </div>
+                                    <div className={styles.exampleItem}>
+                                        <strong>📋 Rapport :</strong><br/>
+                                        "Transforme mes notes en rapport structuré pour la direction, ton formel..."
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Affichage du contenu rendu (markdown ou texte) en lecture */}
+                            {!isEditing && transcript && (
+                                <>
+                                    {isMarkdown(transcript) ? (
+                                        <div className={styles.markdown}>
+                                            <ReactMarkdown>
+                                                {transcript}
+                                            </ReactMarkdown>
+                                        </div>
+                                    ) : (
+                                        <div className={styles.plainText}>
+                                            {transcript.split('\n').map((line, index) => (
+                                                <p key={index}>{line}</p>
+                                            ))}
+                                        </div>
+                                    )}
+                                </>
+                            )}
+
+                            {/* Zone éditable avec textarea */}
+                            {isEditing && (
+                                <textarea
+                                    ref={(el) => {
+                                        if (el && isEditing) {
+                                            setTimeout(() => el.focus(), 0)
+                                        }
+                                    }}
+                                    value={editBuffer}
+                                    onChange={(e) => setEditBuffer(e.target.value)}
+                                    className={styles.editableTranscript}
+                                    style={{
+                                        minHeight: '200px',
+                                        padding: '12px',
+                                        outline: 'none',
+                                        whiteSpace: 'pre-wrap',
+                                        wordWrap: 'break-word',
+                                        textAlign: 'left',
+                                        direction: 'ltr',
+                                        width: '100%',
+                                        boxSizing: 'border-box',
+                                        backgroundColor: '#f9f9f9',
+                                        border: '2px solid #4CAF50',
+                                        borderRadius: '4px',
+                                        fontFamily: 'inherit',
+                                        fontSize: 'inherit',
+                                        lineHeight: 'inherit'
+                                    }}
+                                />
+                            )}
+                        </>
+                    )}
+
+                    {/* Icône pencil/check pour contrôler le mode édition */}
+                    {!isProcessing && (hasInteracted || isEditing || showExamples) && (
+                        <button
+                            onClick={() => {
+                                if (isEditing) {
+                                    // Mode édition: valider
+                                    handleValidation(editBuffer)
+                                } else {
+                                    // Mode lecture: passer en édition
+                                    setHasInteracted(true)
+                                    setShowExamples(false)
+                                    setIsEditing(true)
+                                    setEditBuffer(transcript)
+                                }
+                            }}
+                            className={styles.editIconButton}
+                            title={isEditing ? 'Valider les modifications' : 'Éditer la transcription'}
+                            onMouseDown={(e) => e.preventDefault()}
+                            style={{
+                                position: 'absolute',
+                                top: '8px',
+                                right: '8px',
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '50%',
+                                border: 'none',
+                                backgroundColor: isEditing ? '#4CAF50' : '#2196F3',
+                                color: 'white',
+                                fontSize: '20px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+                                transition: 'all 0.2s ease',
+                                zIndex: 10
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = isEditing ? '#45a049' : '#1976D2'
+                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.25)'
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = isEditing ? '#4CAF50' : '#2196F3'
+                                e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.15)'
+                            }}
+                        >
+                            {isEditing ? '✓' : '✏️'}
+                        </button>
                     )}
                 </div>
 
