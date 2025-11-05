@@ -2,6 +2,8 @@
 
 import {useState, useRef, useCallback, useEffect} from 'react'
 import ReactMarkdown from 'react-markdown'
+import { FaUpload } from "react-icons/fa";
+import { FaDownload } from "react-icons/fa6";
 import styles from '../page.module.css'
 
 interface CostData {
@@ -648,16 +650,46 @@ export default function VoiceRecorder() {
         <div className={styles.container}>
             <h1>🎙️ VoixLà</h1>
 
-            {/* Bouton nouvelle transcription flottant */}
-            {transcript && !isRecording && !isPaused && !isProcessing && !showModelSelection && (
-                <button 
-                    onClick={startNewTranscription}
-                    className={styles.floatingNewButton}
-                    title="Nouvelle transcription"
+            {/* Boutons flottants en haut à droite */}
+            <div className={styles.floatingButtonsContainer}>
+                {/* Upload Button */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="audio/*,.wav,.mp3,.webm,.ogg,.m4a,.aac"
+                    onChange={handleFileUpload}
+                    style={{display: 'none'}}
+                />
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className={styles.floatingIconButton}
+                    title="Téléverser un fichier audio"
                 >
-                    🆕
+                    <FaUpload />
                 </button>
-            )}
+
+                {/* Download Button */}
+                {canDownload && recordedAudioRef.current && (
+                    <button
+                        onClick={downloadRecording}
+                        className={styles.floatingIconButton}
+                        title="Télécharger l'enregistrement"
+                    >
+                        <FaDownload />
+                    </button>
+                )}
+
+                {/* New Transcription Button */}
+                {transcript && !isRecording && !isPaused && !isProcessing && !showModelSelection && (
+                    <button
+                        onClick={startNewTranscription}
+                        className={styles.floatingIconButton}
+                        title="Nouvelle transcription"
+                    >
+                        🆕
+                    </button>
+                )}
+            </div>
 
             {/* Section Audio Compacte */}
             <div className={styles.audioSection}>
@@ -721,33 +753,6 @@ export default function VoiceRecorder() {
                 )}
             </div>
 
-            {/* Section Fichiers */}
-            <div className={styles.filesSection}>
-                <div className={styles.fileActions}>
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="audio/*,.wav,.mp3,.webm,.ogg,.m4a,.aac"
-                        onChange={handleFileUpload}
-                        style={{display: 'none'}}
-                    />
-                    <button
-                        onClick={() => fileInputRef.current?.click()}
-                        className={styles.uploadButton}
-                    >
-                        📤 Upload
-                    </button>
-
-                    {canDownload && recordedAudioRef.current && (
-                        <button
-                            onClick={downloadRecording}
-                            className={styles.downloadButton}
-                        >
-                            💾 Download
-                        </button>
-                    )}
-                </div>
-            </div>
 
             {showModelSelection && (
                 <div className={styles.modelSelection}>

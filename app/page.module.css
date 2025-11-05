@@ -1201,24 +1201,40 @@
 }
 
 /* Bouton nouvelle transcription flottant */
-.floatingNewButton {
+.floatingButtonsContainer {
     position: absolute;
     top: 20px;
     right: 20px;
-    width: 50px;
-    height: 50px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    z-index: 99;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-direction: column;
+}
+
+.floatingIconButton {
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #28a745, #20c997);
+    background: linear-gradient(135deg, #3498db, #2980b9);
     color: white;
     border: none;
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.25);
     transition: all 0.3s ease;
-    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
+}
+
+.floatingIconButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35);
+    background: linear-gradient(135deg, #2980b9, #2471a3);
 }
 
 .floatingNewButton:hover {
@@ -1348,14 +1364,26 @@
 
 /* Responsive pour mobile */
 @media (max-width: 600px) {
+    .floatingButtonsContainer {
+        top: 12px;
+        right: 12px;
+        gap: 6px;
+    }
+
+    .floatingIconButton {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+    }
+
     .floatingNewButton {
-        top: 15px;
-        right: 15px;
+        top: 12px;
+        right: 12px;
         width: 45px;
         height: 45px;
         font-size: 1.3rem;
     }
-    
+
     .infoMessage {
         font-size: 0.8rem;
         padding: 10px 12px;
